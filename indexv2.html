@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Geo-Factory Tycoon - Apex Edition Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Palette de couleurs néon et glassmorphism */
+            --neon-blue: #00e5ff; 
+            --neon-green: #00ff88; 
+            --neon-red: #ff3d00;
+            --neon-gold: #ffcc00;
+            --bg-dark: #020408;
+            --glass: rgba(15, 20, 30, 0.9);
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        /* --- RESET & BASE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: var(--bg-dark); 
+            color: #e5e5e5; 
+            font-family: 'Inter', sans-serif; 
+            overflow: hidden; 
+            height: 100vh;
+        }
+
+        /* --- INTERFACE PRINCIPALE --- */
+        #main-ui { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+
+        /* BARRE SUPÉRIEURE : Gestion des ressources */
+        #top-bar { 
+            height: 65px; background: var(--glass); backdrop-filter: blur(15px);
+            display: flex; align-items: center; padding: 0 20px; gap: 15px;
+            border-bottom: 1px solid var(--border); z-index: 1000;
+        }
+
+        .res-pill {
+            background: rgba(255,255,255,0.03); padding: 8px 15px; border-radius: 8px;
+            border: 1px solid var(--border); display: flex; align-items: center; gap: 8px;
+            font-family: 'Orbitron', sans-serif; font-size: 13px; min-width: 100px;
+        }
+
+        /* GRILLE DE JEU : Zone de construction */
+        #grid-container { 
+            flex: 1; display: grid; grid-template-columns: repeat(10, 1fr);
+            gap: 2px; padding: 15px; background: #05070a; 
+            perspective: 1000px; /* Effet de profondeur */
+        }
+        .cell { 
+            background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03);
+            position: relative; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .cell:hover { background: rgba(0, 229, 255, 0.08); border-color: var(--neon-blue); transform: translateZ(5px); }
+
+        /* PANNEAU DE CONTRATS (Droit) */
+        #contracts-sidebar {
+            position: absolute; right: 20px; top: 85px; width: 280px;
+            display: flex; flex-direction: column; gap: 12px; z-index: 500;
+        }
+        .contract-card {
+            background: var(--glass); border: 1px solid var(--border); border-left: 4px solid var(--neon-blue);
+            padding: 15px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* BARRE D'XP ET INFOS (Bas) */
+        #bottom-ui { position: absolute; bottom: 0; width: 100%; z-index: 1000; }
+        
+        #xp-bar-touch {
+            height: 40px; background: rgba(0,0,0,0.9); border-top: 2px solid var(--neon-blue);
+            display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;
+        }
+        #xp-progress { position: absolute; left: 0; height: 100%; background: linear-gradient(90deg, #0091ff, #00ff88); opacity: 0.2; transition: 0.5s; }
+        
+        #info-drawer {
+            height: 0; background: var(--glass); backdrop-filter: blur(20px); overflow: hidden;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; justify-content: space-around; align-items: center;
+        }
+        #info-drawer.active { height: 150px; border-top: 1px solid var(--border); }
+
+        /* MODALS */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal { background: #0a0f16; border: 1px solid var(--neon-blue); padding: 30px; border-radius: 12px; width: 450px; }
+
+        /* ANIMATIONS & MACHINES */
+        .machine { font-size: 32px; filter: drop-shadow(0 0 10px var(--neon-blue)); animation: float 3s infinite ease-in-out; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        
+        .btn {
+            background: #1a222d; border: 1px solid var(--border); color: white; padding: 10px;
+            border-radius: 6px; cursor: pointer; font-family: 'Orbitron'; font-size: 11px; transition: 0.2s;
+        }
+        .btn:hover { background: var(--neon-blue); color: black; box-shadow: 0 0 15px var(--neon-blue); }
+        .text-gold { color: var(--neon-gold); }
+    </style>
+</head>
+<body>
+
+<div id="main-ui">
+    <div id="top-bar">
+        <div class="res-pill" title="Matière première">⚙️ <span id="res-matter">0</span></div>
+        <div class="res-pill" title="Énergie">⚡ <span id="res-energy">0</span></div>
+        <div class="res-pill" title="Recherche">🧬 <span id="res-research">0</span></div>
+        <div style="flex:1"></div>
+        <div class="res-pill text-gold" title="Argent">💰 <span id="res-money">0</span></div>
+        <button class="btn" onclick="game.openMenu('market')">💹 MARCHÉ</button>
+        <button class="btn" onclick="game.openMenu('tech')">🔬 TECH</button>
+    </div>
+
+    <div id="grid-container"></div>
+
+    <div id="contracts-sidebar"></div>
+
+    <div id="bottom-ui">
+        <div id="info-drawer">
+            <div class="stat-group">
+                <h3>USINE</h3>
+                <p>Niveau : <span id="stat-lvl">1</span></p>
+                <p>Pollution : <span id="stat-poll">0</span>%</p>
+            </div>
+            <div class="stat-group">
+                <h3>ÉCONOMIE</h3>
+                <p>Vente Auto : <span id="stat-auto">ON</span></p>
+                <p>Bonus Prestige : <span id="stat-pres">x1.0</span></p>
+            </div>
+            <button class="btn" style="border-color:var(--neon-red)" onclick="game.prestige()">☢️ RESET QUANTIQUE</button>
+        </div>
+        <div id="xp-bar-touch" onclick="game.toggleDrawer()">
+            <div id="xp-progress"></div>
+            <div style="z-index: 10; font-family: 'Orbitron'; font-size: 12px; letter-spacing: 3px;">
+                SYSTEM STATUS: <span id="xp-txt">0</span>%
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="modal-overlay">
+    <div class="modal">
+        <h2 id="modal-title" style="font-family:'Orbitron'; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:10px;">Menu</h2>
+        <div id="modal-body"></div>
+        <button class="btn" style="width:100%; margin-top:20px;" onclick="game.closeModal()">FERMER</button>
+    </div>
+</div>
+
+<script>
+/**
+ * GEO-FACTORY TYCOON 8.5 - LOGIQUE CORE
+ * Commenté à 80% pour faciliter l'extension manuelle.
+ */
+
+const game = {
+    // 1. ÉTAT DU JEU (Toutes les variables sauvegardables)
+    state: {
+        res: { matter: 100, energy: 50, research: 0, money: 250 }, // Bonus de départ pour éviter le blocage
+        xp: 0, 
+        lvl: 1, 
+        xpNext: 100,
+        grid: Array(60).fill(null), // 6x10 grid
+        pollution: 0,
+        prestigeMult: 1.0,
+        unlocked: ["ext_t1", "gen_t1"], // Machines de départ
+        contracts: [],
+        drawerOpen: false,
+        autoSell: true // Système d'aide à l'économie
+    },
+
+    // 2. BASE DE DONNÉES DES MACHINES (À étendre manuellement ici)
+    machines: {
+        ext_t1: { name: "Foreuse T1", icon: "⛏️", cost: 50, prod: { matter: 2 }, cons: { energy: 1 }, poll: 0.5 },
+        gen_t1: { name: "Dynamo T1", icon: "🌀", cost: 75, prod: { energy: 4 }, cons: { matter: 1 }, poll: 1.2 },
+        solar: { name: "Solaire T2", icon: "☀️", cost: 300, prod: { energy: 2 }, cons: {}, poll: 0 },
+        lab: { name: "Laboratoire", icon: "🧪", cost: 1000, prod: { research: 1 }, cons: { energy: 5 }, poll: 0.2 }
+    },
+
+    // 3. INITIALISATION
+    init() {
+        const grid = document.getElementById('grid-container');
+        // Génération de la grille HTML
+        for(let i=0; i<60; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.onclick = () => this.handleCellClick(i);
+            grid.appendChild(cell);
+        }
+
+        // Démarrage des boucles temporelles
+        setInterval(() => this.mainLoop(), 1000);   // Production et Économie
+        setInterval(() => this.spawnContract(), 20000); // Missions
+        this.updateUI();
+    },
+
+    // 4. BOUCLE PRINCIPALE (Tick de 1 seconde)
+    mainLoop() {
+        let totalPollution = 0;
+
+        // On parcourt chaque cellule de la grille
+        this.state.grid.forEach((mId, i) => {
+            if(!mId) return; // Case vide
+            const def = this.machines[mId];
+
+            // Vérification des ressources pour le fonctionnement
+            if(this.hasResources(def.cons)) {
+                this.consume(def.cons);
+                // Production avec multiplicateur de prestige
+                for(let r in def.prod) {
+                    this.state.res[r] += def.prod[r] * this.state.prestigeMult;
+                }
+                totalPollution += def.poll;
+                this.addXP(1);
+            }
+        });
+
+        // Gestion de la pollution et des revenus automatiques
+        this.state.pollution = Math.max(0, this.state.pollution + (totalPollution - 0.5));
+        
+        // SYSTÈME DE VENTE AUTO : Si activé, vend 10% du stock de matière/énergie par seconde
+        if(this.state.autoSell) {
+            const sellMatter = this.state.res.matter * 0.05;
+            const sellEnergy = this.state.res.energy * 0.05;
+            this.state.res.money += (sellMatter * 2) + (sellEnergy * 1.5);
+            this.state.res.matter -= sellMatter;
+            this.state.res.energy -= sellEnergy;
+        }
+
+        // Mise à jour des contrats
+        this.state.contracts.forEach(c => c.timer--);
+        this.state.contracts = this.state.contracts.filter(c => c.timer > 0);
+
+        this.updateUI();
+        this.renderGrid();
+        this.renderContracts();
+    },
+
+    // 5. SYSTÈME ÉCONOMIQUE & XP
+    addXP(val) {
+        this.state.xp += val;
+        if(this.state.xp >= this.state.xpNext) {
+            this.state.lvl++;
+            this.state.xp = 0;
+            this.state.xpNext *= 1.5; // Courbe de difficulté
+            this.state.res.money += 100 * this.state.lvl; // Bonus de niveau
+        }
+    },
+
+    // 6. GESTION DES CONTRATS (Revenus massifs)
+    spawnContract() {
+        if(this.state.contracts.length >= 3) return;
+        const reward = 500 + (this.state.lvl * 200);
+        this.state.contracts.push({
+            id: Date.now(),
+            target: Math.floor(50 + Math.random() * 100),
+            reward: reward,
+            timer: 60, // 60 secondes pour réussir
+            type: Math.random() > 0.5 ? 'matter' : 'energy'
+        });
+    },
+
+    fulfillContract(id) {
+        const c = this.state.contracts.find(x => x.id === id);
+        if(this.state.res[c.type] >= c.target) {
+            this.state.res[c.type] -= c.target;
+            this.state.res.money += c.reward;
+            this.state.contracts = this.state.contracts.filter(x => x.id !== id);
+            this.addXP(50);
+        }
+    },
+
+    // 7. INTERFACE UTILISATEUR (Rendu)
+    updateUI() {
+        // Update des compteurs
+        document.getElementById('res-matter').innerText = Math.floor(this.state.res.matter);
+        document.getElementById('res-energy').innerText = Math.floor(this.state.res.energy);
+        document.getElementById('res-research').innerText = Math.floor(this.state.res.research);
+        document.getElementById('res-money').innerText = Math.floor(this.state.res.money);
+        
+        // Barre d'XP
+        const xpPerc = (this.state.xp / this.state.xpNext) * 100;
+        document.getElementById('xp-progress').style.width = xpPerc + "%";
+        document.getElementById('xp-txt').innerText = Math.floor(xpPerc);
+
+        // Tiroir d'infos
+        document.getElementById('stat-lvl').innerText = this.state.lvl;
+        document.getElementById('stat-poll').innerText = this.state.pollution.toFixed(1);
+        document.getElementById('stat-auto').innerText = this.state.autoSell ? "ACTIF" : "OFF";
+        document.getElementById('stat-pres').innerText = "x" + this.state.prestigeMult.toFixed(1);
+    },
+
+    renderGrid() {
+        const cells = document.querySelectorAll('.cell');
+        this.state.grid.forEach((mId, i) => {
+            cells[i].innerHTML = "";
+            if(mId) {
+                const div = document.createElement('div');
+                div.className = "machine";
+                div.innerText = this.machines[mId].icon;
+                cells[i].appendChild(div);
+            }
+        });
+    },
+
+    renderContracts() {
+        const container = document.getElementById('contracts-sidebar');
+        container.innerHTML = "";
+        this.state.contracts.forEach(c => {
+            const card = document.createElement('div');
+            card.className = "contract-card";
+            card.innerHTML = `
+                <p style="font-size:10px; color:var(--neon-blue)">MISSION D'URGENCE</p>
+                <p>Livrer <b>${c.target}</b> ${c.type === 'matter' ? '⚙️' : '⚡'}</p>
+                <p class="text-gold">Prime: $${c.reward}</p>
+                <p style="font-size:11px">Temps restant: ${c.timer}s</p>
+                <button class="btn" style="width:100%; margin-top:5px" onclick="game.fulfillContract(${c.id})">LIVRER</button>
+            `;
+            container.appendChild(card);
+        });
+    },
+
+    // 8. ACTIONS JOUEUR
+    handleCellClick(index) {
+        // Si la case est vide, on ouvre le menu de construction
+        if(!this.state.grid[index]) {
+            this.currentTargetCell = index;
+            this.openBuildMenu();
+        } else {
+            // "Manual Pulse" : Cliquer sur une machine donne un petit bonus
+            this.state.res.money += 1;
+            this.addXP(0.5);
+        }
+    },
+
+    openBuildMenu() {
+        const body = document.getElementById('modal-body');
+        body.innerHTML = "";
+        this.state.unlocked.forEach(mId => {
+            const m = this.machines[mId];
+            const b = document.createElement('button');
+            b.className = "btn";
+            b.style.display = "flex"; b.style.width = "100%"; b.style.marginBottom = "8px";
+            b.style.justifyContent = "space-between";
+            b.innerHTML = `<span>${m.icon} ${m.name}</span> <span>$${m.cost}</span>`;
+            b.disabled = this.state.res.money < m.cost;
+            b.onclick = () => this.build(mId);
+            body.appendChild(b);
+        });
+        this.openModal("CONSTRUIRE");
+    },
+
+    build(mId) {
+        const cost = this.machines[mId].cost;
+        if(this.state.res.money >= cost) {
+            this.state.res.money -= cost;
+            this.state.grid[this.currentTargetCell] = mId;
+            this.closeModal();
+            this.addXP(10);
+        }
+    },
+
+    // 9. SYSTÈMES AUXILIAIRES
+    toggleDrawer() {
+        this.state.drawerOpen = !this.state.drawerOpen;
+        document.getElementById('info-drawer').classList.toggle('active', this.state.drawerOpen);
+    },
+
+    openModal(title) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-overlay').style.display = "flex";
+    },
+
+    closeModal() { document.getElementById('modal-overlay').style.display = "none"; },
+
+    hasResources(cons) {
+        for(let r in cons) { if(this.state.res[r] < cons[r]) return false; }
+        return true;
+    },
+
+    consume(cons) {
+        for(let r in cons) { this.state.res[r] -= cons[r]; }
+    },
+
+    openMenu(type) {
+        const body = document.getElementById('modal-body');
+        if(type === 'market') {
+            body.innerHTML = `
+                <p>Le système vend automatiquement vos surplus pour maintenir l'économie.</p>
+                <button class="btn" style="width:100%; margin-top:10px" onclick="game.state.autoSell = !game.state.autoSell; game.closeModal()">TOGGLE AUTO-SELL</button>
+            `;
+            this.openModal("MARCHÉ BOURSIER");
+        } else if(type === 'tech') {
+            body.innerHTML = `<p>Utilisez la recherche (🧬) pour débloquer de nouveaux paliers.</p>
+            <button class="btn" style="width:100%; margin-top:10px" onclick="alert('Ajoutez vos déblocages ici !')">TIER 2 (50 🧬)</button>`;
+            this.openModal("TECHNOLOGIE");
+        }
+    },
+
+    prestige() {
+        if(confirm("Réinitialiser l'usine ? Vous gagnerez +20% de production par niveau actuel.")) {
+            this.state.prestigeMult += (this.state.lvl * 0.2);
+            this.state.grid = Array(60).fill(null);
+            this.state.res = { matter: 100, energy: 50, research: 0, money: 500 };
+            this.state.lvl = 1;
+            this.state.xp = 0;
+            this.toggleDrawer();
+        }
+    }
+};
+
+// Lancement au chargement de la page
+window.onload = () => game.init();
+</script>
+</body>
+</html>
