@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Geo‑Factory Tycoon 6.0 – Singularity MVP++</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;
+    background:#05070a;
+    color:#e5e5e5;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    overflow:hidden;
+}
+#game-root{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    display:flex;
+    background:radial-gradient(circle at top,#1b2333 0,#05070a 55%);
+}
+#grid-container{
+    flex:1;
+    position:relative;
+    display:grid;
+    background:#141820;
+    border-left:2px solid #252b3a;
+    border-right:2px solid #252b3a;
+}
+.cell{
+    border:1px solid #1f2533;
+    background:#10141c;
+    cursor:pointer;
+    transition:background .08s,box-shadow .08s;
+}
+.cell:hover{
+    background:#1b2230;
+    box-shadow:inset 0 0 6px rgba(0,0,0,.6);
+}
+.module{
+    position:relative;
+    background:#2e7d32;
+}
+.module.extracteur_quantique{
+    background:linear-gradient(135deg,#2e7d32,#66bb6a);
+}
+.module.generateur_plasma{
+    background:linear-gradient(135deg,#e64a19,#ff7043);
+}
+.module.convoyeur_quantique{
+    background:#303f9f;
+}
+.module.convoyeur_quantique::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,.15) 0,
+        rgba(255,255,255,.15) 6px,
+        transparent 6px,
+        transparent 12px
+    );
+    animation:conveyor-move .35s linear infinite;
+    mix-blend-mode:screen;
+}
+@keyframes conveyor-move{
+    from{background-position:0 0}
+    to{background-position:12px 0}
+}
+.animated-machine{
+    animation:pulse 1.2s infinite ease-in-out;
+}
+@keyframes pulse{
+    0%{filter:brightness(1)}
+    50%{filter:brightness(1.4)}
+    100%{filter:brightness(1)}
+}
+.pipeline{
+    position:absolute;
+    background:#00bcd4;
+    box-shadow:0 0 6px rgba(0,188,212,.8);
+    z-index:3;
+}
+#hud-left{
+    position:absolute;
+    top:10px;
+    left:10px;
+    width:220px;
+    background:rgba(5,7,12,.9);
+    border-radius:10px;
+    padding:10px 12px;
+    border:1px solid #283040;
+    box-shadow:0 0 12px rgba(0,0,0,.6);
+    font-size:13px;
+    z-index:10;
+}
+.hud-section-title{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:#8fa0ff;
+    margin-bottom:4px;
+}
+.hud-row{
+    display:flex;
+    justify-content:space-between;
+    margin:2px 0;
+}
+#hud-right{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:60px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    z-index:10;
+}
+.hud-circle-btn{
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    border:1px solid #3a4258;
+    background:radial-gradient(circle at 30% 20%,#3f51b5,#1a2033);
+    color:#fff;
+    font-size:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 0 10px rgba(0,0,0,.7);
+    transition:transform .08s,box-shadow .08s,background .08s;
+}
+.hud-circle-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 0 14px rgba(0,0,0,.9);
+    background:radial-gradient(circle at 30% 20%,#5c6bc0,#1a2033);
+}
+#hud-bottom{
+    position:absolute;
+    bottom:10px;
+    left:50%;
+    transform:translateX(-50%);
+    width:60%;
+    max-width:700px;
+    background:rgba(5,7,12,.9);
+    border-radius:12px;
+    padding:10px 16px;
+    border:1px solid #283040;
+    box-shadow:0 0 12px rgba(0,0,0,.6);
+    font-size:13px;
+    z-index:10;
+}
+#xp-bar-container{
+    width:100%;
+    height:10px;
+    border-radius:999px;
+    background:#151a24;
+    overflow:hidden;
+    margin-top:6px;
+}
+#xp-bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#42a5f5,#ab47bc);
+}
+#market-mini{
+    margin-top:6px;
+    font-size:11px;
+    color:#b0bec5;
+}
+.overlay{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:20;
+}
+.overlay-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.6);
+}
+.overlay-content{
+    position:relative;
+    min-width:260px;
+    max-width:360px;
+    background:#151a24;
+    border-radius:12px;
+    border:1px solid #3a4258;
+    padding:16px 18px;
+    box-shadow:0 0 18px rgba(0,0,0,.8);
+    z-index:1;
+}
+.overlay-content h2{
+    margin:0 0 10px;
+    font-size:16px;
+}
+.module-btn{
+    width:100%;
+    margin:6px 0;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid #39425a;
+    background:#1f2634;
+    color:#e0e0e0;
+    cursor:pointer;
+    text-align:left;
+    font-size:13px;
+}
+.module-btn span{
+    float:right;
+    color:#90caf9;
+}
+.module-btn:hover{
+    background:#283144;
+}
+.overlay-close{
+    margin-top:8px;
+    width:100%;
+    padding:6px 0;
+    border-radius:8px;
+    border:1px solid #455a64;
+    background:#263238;
+    color:#eceff1;
+    cursor:pointer;
+}
+#market-overlay .overlay-content{
+    max-width:420px;
+    font-size:13px;
+}
+@media(max-width:768px){
+    #hud-left{width:170px;font-size:11px}
+    #hud-bottom{width:90%}
+}
+#level-up-notification {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    padding: 20px 30px;
+    background: rgba(255, 215, 0, 0.15);
+    border: 2px solid rgba(255, 215, 0, 0.6);
+    border-radius: 12px;
+    color: #ffd700;
+    font-size: 28px;
+    font-weight: bold;
+    text-shadow: 0 0 10px #ffd700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    z-index: 9999;
+}
+#level-up-notification.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+</style>
+</head>
+<body>
+<div id="game-root">
+    <div id="level-up-notification">Niveau +1 !</div>
+    <div id="hud-left">
+        <div class="hud-section-title">Ressources</div>
+        <div class="hud-row"><span>⚙️ Matière</span><span id="res-matter">0</span></div>
+        <div class="hud-row"><span>⚡ Énergie</span><span id="res-energy">0</span></div>
+        <div class="hud-row"><span>💎 Raffinée</span><span id="res-refined">0</span></div>
+        <div class="hud-row"><span>🗑️ Déchets</span><span id="res-waste">0</span></div>
+
+        <div class="hud-section-title" style="margin-top:8px;">État global</div>
+        <div class="hud-row"><span>☣️ Pollution</span><span id="pollution-global">0</span></div>
+        <div class="hud-row"><span>🛠️ Maintenance</span><span id="maintenance-global">100%</span></div>
+        <div class="hud-row"><span>💰 Argent</span><span id="money">0</span></div>
+    </div>
+
+    <div id="hud-right">
+        <button class="hud-circle-btn" id="btn-market" title="Marché">💹</button>
+        <button class="hud-circle-btn" id="btn-stats" title="Stats">📊</button>
+        <button class="hud-circle-btn" id="btn-help" title="Aide">❔</button>
+    </div>
+
+    <div id="hud-bottom">
+        <div class="hud-row">
+            <span>🔼 Niveau : <span id="level">1</span></span>
+            <span>⭐ XP : <span id="xp">0</span> / <span id="xp-next">20</span></span>
+            <span>🏅 Prestige : <span id="prestige">0</span></span>
+        </div>
+        <div id="xp-bar-container">
+            <div id="xp-bar"></div>
+        </div>
+        <div id="market-mini">
+            Marché : ⚙️ <span id="price-matter">10</span> | ⚡ <span id="price-energy">5</span> | 💎 <span id="price-refined">25</span>
+        </div>
+    </div>
+
+    <div class="overlay" id="module-overlay">
+        <div class="overlay-backdrop"></div>
+        <div class="overlay-content">
+            <h2>Placer un module</h2>
+            <!-- rempli dynamiquement -->
+            <button class="overlay-close" id="module-overlay-close">Annuler</button>
+        </div>
+    </div>
+
+    <div class="overlay" id="market-overlay">
+        <div class="overlay-backdrop"></div>
+        <div class="overlay-content">
+            <h2>Marché Boursier</h2>
+            <p>Les prix fluctuent avec le temps. Vendez vos ressources au bon moment.</p>
+            <div class="hud-row"><span>⚙️ Matière</span><span id="market-matter">10</span></div>
+            <div class="hud-row"><span>⚡ Énergie</span><span id="market-energy">5</span></div>
+            <div class="hud-row"><span>💎 Raffinée</span><span id="market-refined">25</span></div>
+            <div style="margin-top:10px;">
+                <button class="module-btn" id="sell-matter">Vendre 10 ⚙️</button>
+                <button class="module-btn" id="sell-energy">Vendre 10 ⚡</button>
+                <button class="module-btn" id="sell-refined">Vendre 5 💎</button>
+            </div>
+            <button class="overlay-close" id="market-overlay-close">Fermer</button>
+        </div>
+    </div>
+
+    <div id="grid-container"></div>
+</div>
+
+<script>
+/* ============================================================
+   SYSTÈME DE MACHINES — TEMPLATES + INSTANCES
+   ============================================================ */
+
+const MACHINE_TEMPLATES = {
+    producer:{hasInput:false,hasOutput:true,canStore:false,isAmplifier:false,isTransport:false,isResearch:false,isEnvironmental:false},
+    processor:{hasInput:true,hasOutput:true,canStore:false,isAmplifier:false,isTransport:false,isResearch:false,isEnvironmental:false},
+    transport:{hasInput:true,hasOutput:true,canStore:false,isAmplifier:false,isTransport:true,isResearch:false,isEnvironmental:false},
+    storage:{hasInput:true,hasOutput:true,canStore:true,isAmplifier:false,isTransport:false,isResearch:false,isEnvironmental:false},
+    amplifier:{hasInput:false,hasOutput:false,canStore:false,isAmplifier:true,isTransport:false,isResearch:false,isEnvironmental:false},
+    research:{hasInput:false,hasOutput:true,canStore:false,isAmplifier:false,isTransport:false,isResearch:true,isEnvironmental:false},
+    environmental:{hasInput:false,hasOutput:false,canStore:false,isAmplifier:false,isTransport:false,isResearch:false,isEnvironmental:true},
+    special:{hasInput:false,hasOutput:false,canStore:false,isAmplifier:false,isTransport:false,isResearch:false,isEnvironmental:false}
+};
+
+const MACHINES = {
+    extracteur_quantique:{
+        id:"extracteur_quantique",
+        name:"Extracteur Quantique",
+        icon:"⛏️",
+        tier:1,
+        template:"producer",
+        levelReq:1,
+        type:"producteur",
+        cost:{energy:120,money:50},
+        inputs:{},
+        outputs:{matter:1.8},
+        pollution:0.1,
+        maintenanceLossPerHour:5,
+        ports:["south","east"],
+        special:{pollutionPenaltyFactor:0.0005},
+        description:"Extrait la matière première brute de la grille quantique."
+    },
+    generateur_plasma:{
+        id:"generateur_plasma",
+        name:"Générateur à Plasma",
+        icon:"⚡",
+        tier:1,
+        template:"processor",
+        levelReq:1,
+        type:"producteur",
+        cost:{bricks:100,money:30},
+        inputs:{matter:1.0},
+        outputs:{energy:3.5},
+        pollution:0.3,
+        maintenanceLossPerHour:8,
+        ports:["north","west"],
+        special:{failureProne:true},
+        description:"Convertit la matière en énergie plasmique."
+    },
+    convoyeur_quantique:{
+        id:"convoyeur_quantique",
+        name:"Convoyeur Quantique",
+        icon:"➡️",
+        tier:2,
+        template:"transport",
+        levelReq:2,
+        type:"transporteur",
+        cost:{energy:60,bricks:40,money:20},
+        inputs:{},
+        outputs:{},
+        pollution:0.05,
+        maintenanceLossPerHour:3,
+        ports:["north","south","east","west"],
+        special:{animated:true,speed:1},
+        description:"Système de transport automatisé avec animation."
+    },
+    entrepot_bancaire:{
+        id:"entrepot_bancaire",
+        name:"Entrepôt Bancaire",
+        icon:"💰",
+        tier:2,
+        template:"storage",
+        levelReq:3,
+        type:"entrepot",
+        cost:{energy:500,bricks:800,money:1000},
+        inputs:{},
+        outputs:{money:3},
+        pollution:0,
+        maintenanceLossPerHour:2,
+        capacity:{generic:1000},
+        ports:["north","south","east","west"],
+        special:{marketLinked:true},
+        description:"Convertit les ressources en argent liquide."
+    },
+    panneau_solaire:{
+        id:"panneau_solaire",
+        name:"Panneau Solaire",
+        icon:"☀️",
+        tier:2,
+        template:"producer",
+        levelReq:4,
+        type:"producteur",
+        cost:{bricks:300,money:400},
+        inputs:{},
+        outputs:{energy:2.0},
+        pollution:0,
+        maintenanceLossPerHour:4,
+        ports:[],
+        special:{efficiencyRange:[0.5,1.5],affectedByDayNight:true},
+        description:"Génère de l'énergie solaire propre."
+    },
+    silo_stockage:{
+        id:"silo_stockage",
+        name:"Silo de Stockage",
+        icon:"📦",
+        tier:2,
+        template:"storage",
+        levelReq:3,
+        type:"stockage",
+        cost:{bricks:200,money:300},
+        inputs:{},
+        outputs:{},
+        pollution:0,
+        maintenanceLossPerHour:2,
+        capacity:{generic:5000},
+        ports:["north","south","east","west"],
+        special:{configurableResource:true},
+        description:"Stocke l'excès de ressources."
+    },
+    raffinerie_avancee:{
+        id:"raffinerie_avancee",
+        name:"Raffinerie Avancée",
+        icon:"🏭",
+        tier:3,
+        template:"processor",
+        levelReq:5,
+        type:"processeur",
+        cost:{energy:400,bricks:250,money:500},
+        inputs:{matter:6,energy:1.2},
+        outputs:{refined:4},
+        pollution:0.8,
+        maintenanceLossPerHour:10,
+        quality:3,
+        ports:["north","south"],
+        special:{premiumOutput:true},
+        description:"Raffine la matière brute en ressource premium."
+    },
+    laboratoire_recherche:{
+        id:"laboratoire_recherche",
+        name:"Laboratoire de Recherche",
+        icon:"🔬",
+        tier:3,
+        template:"research",
+        levelReq:6,
+        type:"recherche",
+        cost:{energy:800,bricks:400,money:1000},
+        inputs:{},
+        outputs:{research:0.5},
+        pollution:0.2,
+        maintenanceLossPerHour:15,
+        ports:["east","west"],
+        special:{branchSpecialization:true},
+        description:"Génère des points de recherche technologique."
+    },
+    purificateur_ecologique:{
+        id:"purificateur_ecologique",
+        name:"Purificateur Écologique",
+        icon:"🌱",
+        tier:3,
+        template:"environmental",
+        levelReq:7,
+        type:"environnemental",
+        cost:{energy:300,bricks:200,money:800,rare_bricks:50},
+        inputs:{},
+        outputs:{pollution_reduction:2.0},
+        pollution:-1.0,
+        maintenanceLossPerHour:7,
+        ports:[],
+        special:{reputationBonus:true,penaltyReduction:true},
+        description:"Réduit la pollution globale de l'usine."
+    },
+    teleporteur_quantique:{
+        id:"teleporteur_quantique",
+        name:"Téléporteur Quantique",
+        icon:"🌀",
+        tier:4,
+        template:"producer",
+        levelReq:10,
+        type:"producteur",
+        cost:{energy:1200,bricks:600,money:2000,rare_bricks:100},
+        inputs:{},
+        outputs:{energy:8,bricks:4,rare_bricks:2},
+        pollution:0.4,
+        maintenanceLossPerHour:12,
+        quality:4,
+        ports:["north","south","east","west"],
+        special:{ignoreDistance:true},
+        description:"Téléporte les ressources instantanément."
+    },
+    centre_recyclage:{
+        id:"centre_recyclage",
+        name:"Centre de Recyclage",
+        icon:"♻️",
+        tier:4,
+        template:"processor",
+        levelReq:9,
+        type:"processeur",
+        cost:{energy:600,bricks:400,money:1500,rare_bricks:200},
+        inputs:{waste:1},
+        outputs:{bricks:0.5},
+        pollution:-0.5,
+        maintenanceLossPerHour:9,
+        ports:["north","south"],
+        special:{cleanupCostReduction:true},
+        description:"Transforme les déchets en matière réutilisable."
+    },
+    ordinateur_quantique:{
+        id:"ordinateur_quantique",
+        name:"Ordinateur Quantique",
+        icon:"💻",
+        tier:5,
+        template:"amplifier",
+        levelReq:15,
+        type:"amplificateur",
+        cost:{energy:2000,bricks:1000,money:5000,rare_bricks:500},
+        inputs:{},
+        outputs:{},
+        pollution:0.1,
+        maintenanceLossPerHour:20,
+        ports:[],
+        special:{radius:3,multiplier:1.8},
+        description:"Boost la production des machines adjacentes."
+    }
+};
+
+const MACHINE_GROUPS = {
+    tier1:["extracteur_quantique","generateur_plasma"],
+    tier2:["convoyeur_quantique","entrepot_bancaire","panneau_solaire","silo_stockage"],
+    tier3:["raffinerie_avancee","laboratoire_recherche","purificateur_ecologique"],
+    tier4:["teleporteur_quantique","centre_recyclage"],
+    amplifiers:["ordinateur_quantique"]
+};
+
+function getMachineDef(id){return MACHINES[id];}
+
+/* ============================================================
+   ÉTAT GLOBAL & MOTEUR
+   ============================================================ */
+
+let level=1,prestige=0,gridSize=6;
+let gridCells=[],cellState=[];
+const resources={matter:0,energy:0,refined:0,waste:0,bricks:0,rare_bricks:0,research:0};
+let money=0;
+let pollutionGlobal=0,maintenanceGlobal=100;
+let xp=0,xpNext=20;
+const market={
+    matter:{price:10,volatility:0.2},
+    energy:{price:5,volatility:0.15},
+    refined:{price:25,volatility:0.25}
+};
+const CHUNK_SIZE=6;
+let spatialGrid={};
+let lastTime=0,marketTimer=0;
+let isDay=true,dayTimer=0,weather="clear";
+const activeEvents=[];
+const gridContainer=document.getElementById("grid-container");
+
+function createEmptyCellState(){
+    return{
+        machineId:null,
+        maintenance:100,
+        pollutionLocal:0,
+        broken:false,
+        buffer:{},
+        evolutionTimer:0,
+        evolutionStage:0
+    };
+}
+
+function getChunkCoords(index){
+    const row=Math.floor(index/gridSize);
+    const col=index%gridSize;
+    return{cx:Math.floor(col/CHUNK_SIZE),cy:Math.floor(row/CHUNK_SIZE)};
+}
+
+function buildGrid(){
+    gridContainer.innerHTML="";
+    gridContainer.style.gridTemplateColumns=`repeat(${gridSize},1fr)`;
+    gridContainer.style.gridTemplateRows=`repeat(${gridSize},1fr)`;
+    gridCells=[];
+    cellState=[];
+    spatialGrid={};
+    const total=gridSize*gridSize;
+    for(let i=0;i<total;i++){
+        const cell=document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.index=i;
+        cellState[i]=createEmptyCellState();
+        cell.addEventListener("click",()=>{selectedCellIndex=i;openModuleOverlay();});
+        gridContainer.appendChild(cell);
+        gridCells.push(cell);
+        const {cx,cy}=getChunkCoords(i);
+        const key=`${cx},${cy}`;
+        if(!spatialGrid[key])spatialGrid[key]=[];
+        spatialGrid[key].push(i);
+    }
+    updatePipelines();
+}
+
+function getNeighbors(i){
+    const row=Math.floor(i/gridSize);
+    const col=i%gridSize;
+    const res=[];
+    res.push(col>0?i-1:null);
+    res.push(col<gridSize-1?i+1:null);
+    res.push(row>0?i-gridSize:null);
+    res.push(row<gridSize-1?i+gridSize:null);
+    return res;
+}
+
+function drawPipelineBetween(aIndex,bIndex){
+    const a=gridCells[aIndex],b=gridCells[bIndex];
+    if(!a||!b)return;
+    const rectA=a.getBoundingClientRect();
+    const rectB=b.getBoundingClientRect();
+    const pipe=document.createElement("div");
+    pipe.classList.add("pipeline");
+    if(rectA.top===rectB.top){
+        pipe.style.top=(rectA.top+rectA.height/2)+"px";
+        pipe.style.height="4px";
+        pipe.style.left=Math.min(rectA.left,rectB.left)+rectA.width+"px";
+        pipe.style.width=Math.abs(rectA.left-rectB.left)-rectA.width+"px";
+    }
+    if(rectA.left===rectB.left){
+        pipe.style.left=(rectA.left+rectA.width/2)+"px";
+        pipe.style.width="4px";
+        pipe.style.top=Math.min(rectA.top,rectB.top)+rectA.height+"px";
+        pipe.style.height=Math.abs(rectA.top-rectB.top)-rectA.height+"px";
+    }
+    document.body.appendChild(pipe);
+}
+
+function updatePipelines(){
+    document.querySelectorAll(".pipeline").forEach(p=>p.remove());
+    const total=gridSize*gridSize;
+    for(let i=0;i<total;i++){
+        const state=cellState[i];
+        if(!state.machineId)continue;
+        const neighbors=getNeighbors(i);
+        neighbors.forEach(nIndex=>{
+            if(nIndex===null)return;
+            const nState=cellState[nIndex];
+            if(!nState.machineId)return;
+            drawPipelineBetween(i,nIndex);
+        });
+    }
+}
+
+/* ============================================================
+   OVERLAY MODULES
+   ============================================================ */
+
+const moduleOverlay=document.getElementById("module-overlay");
+const moduleOverlayClose=document.getElementById("module-overlay-close");
+let selectedCellIndex=null;
+
+function openModuleOverlay(){populateModuleOverlay();moduleOverlay.style.display="flex";}
+function closeModuleOverlay(){moduleOverlay.style.display="none";selectedCellIndex=null;}
+moduleOverlayClose.addEventListener("click",closeModuleOverlay);
+moduleOverlay.querySelector(".overlay-backdrop").addEventListener("click",closeModuleOverlay);
+
+function placeModule(index,id){
+    const state=cellState[index];
+    if(state.machineId)return;
+    state.machineId=id;
+    state.maintenance=100;
+    state.pollutionLocal=0;
+    state.broken=false;
+    state.buffer={};
+    const cell=gridCells[index];
+    cell.classList.add("module",id);
+    const machine=getMachineDef(id);
+    if(machine&&machine.special&&machine.special.animated)cell.classList.add("animated-machine");
+    updatePipelines();
+}
+
+function populateModuleOverlay(){
+    const container=document.querySelector("#module-overlay .overlay-content");
+    container.innerHTML="<h2>Placer un module</h2>";
+    for(const groupName in MACHINE_GROUPS){
+        const title=document.createElement("div");
+        title.textContent=groupName.toUpperCase();
+        title.style.marginTop="10px";
+        title.style.fontWeight="bold";
+        container.appendChild(title);
+        MACHINE_GROUPS[groupName].forEach(id=>{
+            const m=MACHINES[id];
+            if(!m)return;
+            const btn=document.createElement("button");
+            btn.className="module-btn";
+            btn.dataset.module=id;
+            btn.innerHTML=`${m.icon} ${m.name} <span>T${m.tier}</span>`;
+            btn.onclick=()=>{placeModule(selectedCellIndex,id);closeModuleOverlay();};
+            container.appendChild(btn);
+        });
+    }
+    const close=document.createElement("button");
+    close.className="overlay-close";
+    close.textContent="Annuler";
+    close.onclick=closeModuleOverlay;
+    container.appendChild(close);
+}
+
+/* ============================================================
+   ENVIRONNEMENT (JOUR/NUIT + MÉTÉO)
+   ============================================================ */
+
+function randomWeather(){
+    const list=["clear","cloudy","storm","rain"];
+    return list[Math.floor(Math.random()*list.length)];
+}
+function updateEnvironment(dt){
+    dayTimer+=dt;
+    if(dayTimer>=60){
+        isDay=!isDay;
+        dayTimer=0;
+    }
+    if(Math.random()<dt*0.01){
+        weather=randomWeather();
+    }
+}
+
+/* ============================================================
+   MARCHÉ & ÉCONOMIE
+   ============================================================ */
+
+function updateMarketPrices(){
+    for(const key in market){
+        const asset=market[key];
+        const delta=(Math.random()-0.5)*asset.volatility*asset.price;
+        asset.price=Math.max(1,asset.price+delta);
+    }
+}
+function sellResource(type,amount){
+    if(resources[type]<amount)return;
+    resources[type]-=amount;
+    money+=market[type].price*amount;
+}
+
+/* ============================================================
+   TRANSPORT & STOCKAGE
+   ============================================================ */
+
+function getNextCell(index,machine){
+    const neighbors=getNeighbors(index);
+    // simple : prend le premier voisin avec une machine
+    for(const n of neighbors){
+        if(n===null)continue;
+        return n;
+    }
+    return null;
+}
+
+/* ============================================================
+   notification
+   ============================================================ */
+
+function showLevelUpNotification(newLevel) {
+    const notif = document.getElementById("level-up-notification");
+    notif.textContent = "Niveau " + newLevel + " atteint !";
+    notif.classList.add("show");
+
+    setTimeout(() => {
+        notif.classList.remove("show");
+    }, 2000);
+}
+
+
+/* ============================================================
+   SIMULATION
+   ============================================================ */
+
+function gameLoop(timestamp){
+    const dt=(timestamp-lastTime)/1000||0;
+    lastTime=timestamp;
+    simulate(dt);
+    updateHUD();
+    requestAnimationFrame(gameLoop);
+}
+
+function simulate(dt){
+    updateEnvironment(dt);
+    pollutionGlobal=0;
+    let maintenanceSum=0,moduleCount=0;
+    const amplificationMap=new Array(cellState.length).fill(1);
+
+    // amplificateurs
+    for(let i=0;i<cellState.length;i++){
+        const state=cellState[i];
+        if(!state.machineId)continue;
+        const machine=getMachineDef(state.machineId);
+        if(!machine)continue;
+        if(machine.template==="amplifier"){
+            const radius=machine.special?.radius||0;
+            const multiplier=machine.special?.multiplier||1;
+            const cx=i%gridSize;
+            const cy=Math.floor(i/gridSize);
+            for(let y=-radius;y<=radius;y++){
+                for(let x=-radius;x<=radius;x++){
+                    const nx=cx+x,ny=cy+y;
+                    if(nx<0||ny<0||nx>=gridSize||ny>=gridSize)continue;
+                    const idx=ny*gridSize+nx;
+                    amplificationMap[idx]*=multiplier;
+                }
+            }
+        }
+    }
+
+    for(const key in spatialGrid){
+        const indices=spatialGrid[key];
+        for(const index of indices){
+            const state=cellState[index];
+            if(!state.machineId)continue;
+            const machine=getMachineDef(state.machineId);
+            if(!machine)continue;
+
+            // maintenance
+            state.maintenance-= (machine.maintenanceLossPerHour/3600)*dt;
+            if(state.maintenance<0)state.maintenance=0;
+            if(state.maintenance<15)state.broken=true;
+            if(state.maintenance>25)state.broken=false;
+
+            // pollution
+            state.pollutionLocal+=machine.pollution*dt;
+            pollutionGlobal+=machine.pollution*dt;
+
+            // environnemental
+            if(machine.template==="environmental"){
+                if(machine.outputs.pollution_reduction){
+                    pollutionGlobal-=machine.outputs.pollution_reduction*dt;
+                }
+            }
+
+            // transport
+            if(machine.template==="transport"){
+                const next=getNextCell(index,machine);
+                if(next!==null){
+                    for(const res in state.buffer){
+                        const amount=state.buffer[res];
+                        if(amount<=0)continue;
+                        const moved=Math.min(amount,machine.special?.speed||1)*dt;
+                        state.buffer[res]-=moved;
+                        cellState[next].buffer[res]=(cellState[next].buffer[res]||0)+moved;
+                    }
+                }
+            }
+
+            // stockage
+            if(machine.template==="storage"){
+                for(const res in machine.capacity||{}){
+                    const cap=machine.capacity[res];
+                    const stored=state.buffer[res]||0;
+                    if(stored>cap)state.buffer[res]=cap;
+                }
+            }
+
+            // production
+            if(!state.broken && (machine.template==="producer"||machine.template==="processor"||machine.template==="research")){
+                let canProduce=true;
+                for(const res in machine.inputs){
+                    if((resources[res]||0)<machine.inputs[res]*dt){
+                        canProduce=false;break;
+                    }
+                }
+                if(canProduce){
+                    for(const res in machine.inputs){
+                        resources[res]-=machine.inputs[res]*dt;
+                    }
+                    let pollutionMultiplier=1;
+                    if(machine.special&&machine.special.pollutionPenaltyFactor){
+                        const penalty=pollutionGlobal*machine.special.pollutionPenaltyFactor;
+                        pollutionMultiplier=Math.max(0.5,1-penalty);
+                    }
+                    const amp=amplificationMap[index]||1;
+                    for(const res in machine.outputs){
+                        let factor=1;
+                        if(machine.id==="panneau_solaire"){
+                            factor=isDay?1:0.2;
+                            if(weather==="cloudy")factor*=0.6;
+                            if(weather==="storm")factor*=0.3;
+                        }
+                        resources[res]=(resources[res]||0)+machine.outputs[res]*dt*pollutionMultiplier*amp*factor;
+                    }
+                    xp+=dt*(machine.outputs.matter||0)+(machine.outputs.energy||0)+(machine.outputs.refined||0);
+                }
+            }
+
+            maintenanceSum+=state.maintenance;
+            moduleCount++;
+        }
+    }
+
+    maintenanceGlobal=moduleCount>0?maintenanceSum/moduleCount:100;
+
+    if(xp>=xpNext){
+        xp-=xpNext;
+        level++;
+        showLevelUpNotification(level); // 🔥 notification ici
+        xpNext=Math.floor(xpNext*1.35+10);
+        gridSize++;
+        buildGrid();
+    }
+
+    marketTimer+=dt;
+    if(marketTimer>=5){
+        marketTimer=0;
+        updateMarketPrices();
+    }
+}
+
+/* ============================================================
+   HUD & UI
+   ============================================================ */
+
+function updateHUD(){
+    document.getElementById("res-matter").textContent=resources.matter.toFixed(1);
+    document.getElementById("res-energy").textContent=resources.energy.toFixed(1);
+    document.getElementById("res-refined").textContent=resources.refined.toFixed(1);
+    document.getElementById("res-waste").textContent=resources.waste.toFixed(1);
+    document.getElementById("pollution-global").textContent=pollutionGlobal.toFixed(1);
+    document.getElementById("maintenance-global").textContent=maintenanceGlobal.toFixed(0)+"%";
+    document.getElementById("money").textContent=money.toFixed(0);
+    document.getElementById("level").textContent=level;
+    document.getElementById("xp").textContent=xp.toFixed(1);
+    document.getElementById("xp-next").textContent=xpNext.toFixed(1);
+    document.getElementById("prestige").textContent=prestige;
+    const xpRatio=Math.min(1,xp/xpNext);
+    document.getElementById("xp-bar").style.width=(xpRatio*100)+"%";
+    document.getElementById("price-matter").textContent=market.matter.price.toFixed(1);
+    document.getElementById("price-energy").textContent=market.energy.price.toFixed(1);
+    document.getElementById("price-refined").textContent=market.refined.price.toFixed(1);
+}
+
+/* ============================================================
+   OVERLAY MARCHÉ
+   ============================================================ */
+
+const marketOverlay=document.getElementById("market-overlay");
+const marketOverlayClose=document.getElementById("market-overlay-close");
+function openMarketOverlay(){marketOverlay.style.display="flex";refreshMarketOverlay();}
+function closeMarketOverlay(){marketOverlay.style.display="none";}
+marketOverlayClose.addEventListener("click",closeMarketOverlay);
+marketOverlay.querySelector(".overlay-backdrop").addEventListener("click",closeMarketOverlay);
+function refreshMarketOverlay(){
+    document.getElementById("market-matter").textContent=market.matter.price.toFixed(1);
+    document.getElementById("market-energy").textContent=market.energy.price.toFixed(1);
+    document.getElementById("market-refined").textContent=market.refined.price.toFixed(1);
+}
+document.getElementById("btn-market").addEventListener("click",openMarketOverlay);
+document.getElementById("sell-matter").addEventListener("click",()=>{sellResource("matter",10);refreshMarketOverlay();});
+document.getElementById("sell-energy").addEventListener("click",()=>{sellResource("energy",10);refreshMarketOverlay();});
+document.getElementById("sell-refined").addEventListener("click",()=>{sellResource("refined",5);refreshMarketOverlay();});
+
+/* ============================================================
+   LANCEMENT
+   ============================================================ */
+
+buildGrid();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
