@@ -40,7 +40,6 @@ body{
 }
 .module{
     position:relative;
-    background:#2e7d32;
 }
 .module.extracteur_quantique{
     background:linear-gradient(135deg,#2e7d32,#66bb6a);
@@ -83,31 +82,69 @@ body{
     box-shadow:0 0 6px rgba(0,188,212,.8);
     z-index:3;
 }
-#hud-left{
+
+/* TOP BAR HUD PRO – FIXED */
+#top-bar{
     position:absolute;
-    top:10px;
-    left:10px;
-    width:220px;
-    background:rgba(5,7,12,.9);
-    border-radius:10px;
-    padding:10px 12px;
+    top:6px;
+    left:50%;
+    transform:translateX(-50%);
+    max-width:900px;
+    width:90%;
+    background:rgba(5,7,12,.85);
+    border-radius:999px;
     border:1px solid #283040;
-    box-shadow:0 0 12px rgba(0,0,0,.6);
-    font-size:13px;
-    z-index:10;
-}
-.hud-section-title{
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:1px;
-    color:#8fa0ff;
-    margin-bottom:4px;
-}
-.hud-row{
+    box-shadow:0 0 10px rgba(0,0,0,.6);
+    padding:4px 10px;
     display:flex;
+    align-items:center;
     justify-content:space-between;
-    margin:2px 0;
+    z-index:20;
 }
+#top-scroll{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    overflow:hidden;
+    white-space:nowrap;
+    flex:1;
+}
+.top-item{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:12px;
+    padding:2px 6px;
+    border-radius:999px;
+    background:#151a24;
+    border:1px solid #39425a;
+    cursor:pointer;
+    transition:background .08s,transform .08s;
+}
+.top-item span.icon{
+    font-size:14px;
+}
+.top-item:hover{
+    background:#1f2634;
+    transform:translateY(-1px);
+}
+#top-menu-btn{
+    margin-left:8px;
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    border:1px solid #3a4258;
+    background:radial-gradient(circle at 30% 20%,#26a69a,#004d40);
+    color:#fff;
+    font-size:18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+}
+
+/* HUD boutons desktop (secondaire) */
 #hud-right{
     position:absolute;
     top:10px;
@@ -138,6 +175,8 @@ body{
     box-shadow:0 0 14px rgba(0,0,0,.9);
     background:radial-gradient(circle at 30% 20%,#5c6bc0,#1a2033);
 }
+
+/* HUD bas : niveau / XP / prestige + mini marché */
 #hud-bottom{
     position:absolute;
     bottom:10px;
@@ -152,6 +191,11 @@ body{
     box-shadow:0 0 12px rgba(0,0,0,.6);
     font-size:13px;
     z-index:10;
+}
+.hud-row{
+    display:flex;
+    justify-content:space-between;
+    margin:2px 0;
 }
 #xp-bar-container{
     width:100%;
@@ -171,13 +215,15 @@ body{
     font-size:11px;
     color:#b0bec5;
 }
+
+/* Overlays génériques */
 .overlay{
     position:absolute;
     inset:0;
     display:none;
     align-items:center;
     justify-content:center;
-    z-index:20;
+    z-index:30;
 }
 .overlay-backdrop{
     position:absolute;
@@ -187,13 +233,14 @@ body{
 .overlay-content{
     position:relative;
     min-width:260px;
-    max-width:360px;
+    max-width:420px;
     background:#151a24;
     border-radius:12px;
     border:1px solid #3a4258;
     padding:16px 18px;
     box-shadow:0 0 18px rgba(0,0,0,.8);
     z-index:1;
+    font-size:13px;
 }
 .overlay-content h2{
     margin:0 0 10px;
@@ -228,61 +275,146 @@ body{
     color:#eceff1;
     cursor:pointer;
 }
-#market-overlay .overlay-content{
-    max-width:420px;
-    font-size:13px;
+
+/* Notification de level-up */
+#level-up-notification{
+    position:absolute;
+    top:40%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0.8);
+    padding:20px 30px;
+    background:rgba(255,215,0,.15);
+    border:2px solid rgba(255,215,0,.6);
+    border-radius:12px;
+    color:#ffd700;
+    font-size:28px;
+    font-weight:bold;
+    text-shadow:0 0 10px #ffd700;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .4s ease,transform .4s ease;
+    z-index:9999;
 }
-@media(max-width:768px){
-    #hud-left{width:170px;font-size:11px}
-    #hud-bottom{width:90%}
-}
-#level-up-notification {
-    position: absolute;
-    top: 40%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
-    padding: 20px 30px;
-    background: rgba(255, 215, 0, 0.15);
-    border: 2px solid rgba(255, 215, 0, 0.6);
-    border-radius: 12px;
-    color: #ffd700;
-    font-size: 28px;
-    font-weight: bold;
-    text-shadow: 0 0 10px #ffd700;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease, transform 0.4s ease;
-    z-index: 9999;
-}
-#level-up-notification.show {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+#level-up-notification.show{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
 }
 
+/* Menu mobile principal (panel) */
+#mobile-menu-panel{
+    position:absolute;
+    top:46px;
+    right:10px;
+    background:rgba(5,7,12,.95);
+    border-radius:10px;
+    border:1px solid #283040;
+    padding:6px 8px;
+    display:none;
+    z-index:25;
+}
+.mobile-menu-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:4px 6px;
+    border-radius:6px;
+    border:1px solid #39425a;
+    background:#151a24;
+    color:#e0e0e0;
+    font-size:12px;
+    cursor:pointer;
+    margin:2px 0;
+}
+.mobile-menu-btn span.icon{
+    font-size:16px;
+}
+
+/* Overlay info (détails des icônes du haut) */
+#info-overlay .overlay-content{
+    max-width:360px;
+}
+
+/* Mobile: top-bar scrollable, HUD adapté */
+@media(max-width:768px){
+    #hud-right{
+        display:none;
+    }
+    #hud-bottom{
+        bottom:0;
+        left:0;
+        transform:none;
+        width:100%;
+        border-radius:10px 10px 0 0;
+        padding:6px 10px;
+        font-size:11px;
+    }
+    #xp-bar-container{
+        height:8px;
+    }
+    #market-mini{
+        font-size:10px;
+    }
+    .overlay-content{
+        width:90%;
+        max-width:none;
+    }
+    #top-bar{
+        top:4px;
+        width:96%;
+        padding:3px 6px;
+    }
+    #top-scroll{
+        overflow-x:auto;
+        -webkit-overflow-scrolling:touch;
+    }
+    .top-item{
+        font-size:11px;
+        padding:2px 5px;
+    }
+}
+
+/* Desktop: pas de scroll visible, juste compact */
+@media(min-width:769px){
+    #top-scroll{
+        overflow:hidden;
+    }
+}
 </style>
 </head>
 <body>
 <div id="game-root">
-    <div id="level-up-notification">Niveau +1 !</div>
-    <div id="hud-left">
-        <div class="hud-section-title">Ressources</div>
-        <div class="hud-row"><span>⚙️ Matière</span><span id="res-matter">0</span></div>
-        <div class="hud-row"><span>⚡ Énergie</span><span id="res-energy">0</span></div>
-        <div class="hud-row"><span>💎 Raffinée</span><span id="res-refined">0</span></div>
-        <div class="hud-row"><span>🗑️ Déchets</span><span id="res-waste">0</span></div>
 
-        <div class="hud-section-title" style="margin-top:8px;">État global</div>
-        <div class="hud-row"><span>☣️ Pollution</span><span id="pollution-global">0</span></div>
-        <div class="hud-row"><span>🛠️ Maintenance</span><span id="maintenance-global">100%</span></div>
-        <div class="hud-row"><span>💰 Argent</span><span id="money">0</span></div>
+    <!-- Notification de level-up -->
+    <div id="level-up-notification">Niveau +1 !</div>
+
+    <!-- TOP BAR HUD PRO -->
+    <div id="top-bar">
+        <div id="top-scroll">
+            <div class="top-item" id="top-resources">
+                <span class="icon">⚙️</span><span id="top-matter">0.0</span>
+                <span class="icon">⚡</span><span id="top-energy">0.0</span>
+                <span class="icon">💎</span><span id="top-refined">0.0</span>
+                <span class="icon">🗑️</span><span id="top-waste">0.0</span>
+            </div>
+            <div class="top-item" id="top-economy">
+                <span class="icon">💰</span><span id="top-money">0</span>
+            </div>
+            <div class="top-item" id="top-state">
+                <span class="icon">☣️</span><span id="top-pollution">0.0</span>
+                <span class="icon">🛠️</span><span id="top-maintenance">100%</span>
+            </div>
+        </div>
+        <button id="top-menu-btn">☰</button>
     </div>
 
+    <!-- HUD boutons desktop -->
     <div id="hud-right">
         <button class="hud-circle-btn" id="btn-market" title="Marché">💹</button>
         <button class="hud-circle-btn" id="btn-stats" title="Stats">📊</button>
         <button class="hud-circle-btn" id="btn-help" title="Aide">❔</button>
     </div>
 
+    <!-- HUD bas : niveau / XP / prestige + mini marché -->
     <div id="hud-bottom">
         <div class="hud-row">
             <span>🔼 Niveau : <span id="level">1</span></span>
@@ -297,6 +429,20 @@ body{
         </div>
     </div>
 
+    <!-- Menu mobile / global (panel) -->
+    <div id="mobile-menu-panel">
+        <div class="mobile-menu-btn" id="mmarket">
+            <span class="icon">💹</span><span>Marché</span>
+        </div>
+        <div class="mobile-menu-btn" id="mstats">
+            <span class="icon">📊</span><span>Stats</span>
+        </div>
+        <div class="mobile-menu-btn" id="mhelp">
+            <span class="icon">❔</span><span>Aide</span>
+        </div>
+    </div>
+
+    <!-- Overlay sélection de module -->
     <div class="overlay" id="module-overlay">
         <div class="overlay-backdrop"></div>
         <div class="overlay-content">
@@ -306,6 +452,7 @@ body{
         </div>
     </div>
 
+    <!-- Overlay marché -->
     <div class="overlay" id="market-overlay">
         <div class="overlay-backdrop"></div>
         <div class="overlay-content">
@@ -323,6 +470,47 @@ body{
         </div>
     </div>
 
+    <!-- Overlay stats -->
+    <div class="overlay" id="stats-overlay">
+        <div class="overlay-backdrop"></div>
+        <div class="overlay-content">
+            <h2>Statistiques avancées</h2>
+            <p>Vue rapide de la production et de la consommation.</p>
+            <div class="hud-row"><span>Prod. ⚙️</span><span id="stat-prod-matter">0/s</span></div>
+            <div class="hud-row"><span>Prod. ⚡</span><span id="stat-prod-energy">0/s</span></div>
+            <div class="hud-row"><span>Prod. 💎</span><span id="stat-prod-refined">0/s</span></div>
+            <div class="hud-row"><span>Recherche</span><span id="stat-research">0/s</span></div>
+            <button class="overlay-close" id="stats-overlay-close">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Overlay aide / tutoriel -->
+    <div class="overlay" id="help-overlay">
+        <div class="overlay-backdrop"></div>
+        <div class="overlay-content">
+            <h2>Tutoriel rapide</h2>
+            <ul style="padding-left:18px;margin-top:4px;">
+                <li>Clique sur une case vide pour placer un module.</li>
+                <li>Les extracteurs produisent de la matière, les générateurs de l’énergie.</li>
+                <li>Les convoyeurs transportent les ressources entre les cases.</li>
+                <li>Les amplificateurs boostent les machines dans un rayon.</li>
+                <li>Le marché permet de vendre tes ressources pour gagner de l’argent.</li>
+            </ul>
+            <button class="overlay-close" id="help-overlay-close">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Overlay info (détails des icônes du haut) -->
+    <div class="overlay" id="info-overlay">
+        <div class="overlay-backdrop"></div>
+        <div class="overlay-content">
+            <h2 id="info-title">Infos</h2>
+            <div id="info-body"></div>
+            <button class="overlay-close" id="info-overlay-close">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Grille principale -->
     <div id="grid-container"></div>
 </div>
 
@@ -338,7 +526,7 @@ const MACHINE_TEMPLATES = {
     storage:{hasInput:true,hasOutput:true,canStore:true,isAmplifier:false,isTransport:false,isResearch:false,isEnvironmental:false},
     amplifier:{hasInput:false,hasOutput:false,canStore:false,isAmplifier:true,isTransport:false,isResearch:false,isEnvironmental:false},
     research:{hasInput:false,hasOutput:true,canStore:false,isAmplifier:false,isTransport:false,isResearch:true,isEnvironmental:false},
-    environmental:{hasInput:false,hasOutput:false,canStore:false,isAmplifier:false,isTransport:false,isResearch:false,isEnvironmental:true},
+    environmental:{hasInput:false,hasOutput:false,canStore:false,isAmplifier:false,isTransport:false,isResearch:false,isEnvironmental:false},
     special:{hasInput:false,hasOutput:false,canStore:false,isAmplifier:false,isTransport:false,isResearch:false,isEnvironmental:false}
 };
 
@@ -582,7 +770,10 @@ const CHUNK_SIZE=6;
 let spatialGrid={};
 let lastTime=0,marketTimer=0;
 let isDay=true,dayTimer=0,weather="clear";
-const activeEvents=[];
+
+/* stats instantanées simples */
+let statProdMatter=0,statProdEnergy=0,statProdRefined=0,statResearch=0;
+
 const gridContainer=document.getElementById("grid-container");
 
 function createEmptyCellState(){
@@ -591,9 +782,7 @@ function createEmptyCellState(){
         maintenance:100,
         pollutionLocal:0,
         broken:false,
-        buffer:{},
-        evolutionTimer:0,
-        evolutionStage:0
+        buffer:{}
     };
 }
 
@@ -773,7 +962,6 @@ function sellResource(type,amount){
 
 function getNextCell(index,machine){
     const neighbors=getNeighbors(index);
-    // simple : prend le premier voisin avec une machine
     for(const n of neighbors){
         if(n===null)continue;
         return n;
@@ -782,19 +970,15 @@ function getNextCell(index,machine){
 }
 
 /* ============================================================
-   notification
+   NOTIFICATION LEVEL-UP
    ============================================================ */
 
-function showLevelUpNotification(newLevel) {
-    const notif = document.getElementById("level-up-notification");
-    notif.textContent = "Niveau " + newLevel + " atteint !";
+function showLevelUpNotification(newLevel){
+    const notif=document.getElementById("level-up-notification");
+    notif.textContent="Niveau "+newLevel+" atteint !";
     notif.classList.add("show");
-
-    setTimeout(() => {
-        notif.classList.remove("show");
-    }, 2000);
+    setTimeout(()=>{notif.classList.remove("show");},2000);
 }
-
 
 /* ============================================================
    SIMULATION
@@ -813,8 +997,9 @@ function simulate(dt){
     pollutionGlobal=0;
     let maintenanceSum=0,moduleCount=0;
     const amplificationMap=new Array(cellState.length).fill(1);
+    statProdMatter=0;statProdEnergy=0;statProdRefined=0;statResearch=0;
 
-    // amplificateurs
+    // amplificateurs (effet de zone)
     for(let i=0;i<cellState.length;i++){
         const state=cellState[i];
         if(!state.machineId)continue;
@@ -855,10 +1040,8 @@ function simulate(dt){
             pollutionGlobal+=machine.pollution*dt;
 
             // environnemental
-            if(machine.template==="environmental"){
-                if(machine.outputs.pollution_reduction){
-                    pollutionGlobal-=machine.outputs.pollution_reduction*dt;
-                }
+            if(machine.template==="environmental" && machine.outputs.pollution_reduction){
+                pollutionGlobal-=machine.outputs.pollution_reduction*dt;
             }
 
             // transport
@@ -884,7 +1067,7 @@ function simulate(dt){
                 }
             }
 
-            // production
+            // production / recherche
             if(!state.broken && (machine.template==="producer"||machine.template==="processor"||machine.template==="research")){
                 let canProduce=true;
                 for(const res in machine.inputs){
@@ -909,7 +1092,12 @@ function simulate(dt){
                             if(weather==="cloudy")factor*=0.6;
                             if(weather==="storm")factor*=0.3;
                         }
-                        resources[res]=(resources[res]||0)+machine.outputs[res]*dt*pollutionMultiplier*amp*factor;
+                        const delta=machine.outputs[res]*dt*pollutionMultiplier*amp*factor;
+                        resources[res]=(resources[res]||0)+delta;
+                        if(res==="matter")statProdMatter+=delta/dt;
+                        if(res==="energy")statProdEnergy+=delta/dt;
+                        if(res==="refined")statProdRefined+=delta/dt;
+                        if(res==="research")statResearch+=delta/dt;
                     }
                     xp+=dt*(machine.outputs.matter||0)+(machine.outputs.energy||0)+(machine.outputs.refined||0);
                 }
@@ -925,7 +1113,7 @@ function simulate(dt){
     if(xp>=xpNext){
         xp-=xpNext;
         level++;
-        showLevelUpNotification(level); // 🔥 notification ici
+        showLevelUpNotification(level);
         xpNext=Math.floor(xpNext*1.35+10);
         gridSize++;
         buildGrid();
@@ -943,13 +1131,7 @@ function simulate(dt){
    ============================================================ */
 
 function updateHUD(){
-    document.getElementById("res-matter").textContent=resources.matter.toFixed(1);
-    document.getElementById("res-energy").textContent=resources.energy.toFixed(1);
-    document.getElementById("res-refined").textContent=resources.refined.toFixed(1);
-    document.getElementById("res-waste").textContent=resources.waste.toFixed(1);
-    document.getElementById("pollution-global").textContent=pollutionGlobal.toFixed(1);
-    document.getElementById("maintenance-global").textContent=maintenanceGlobal.toFixed(0)+"%";
-    document.getElementById("money").textContent=money.toFixed(0);
+    // bas
     document.getElementById("level").textContent=level;
     document.getElementById("xp").textContent=xp.toFixed(1);
     document.getElementById("xp-next").textContent=xpNext.toFixed(1);
@@ -959,10 +1141,25 @@ function updateHUD(){
     document.getElementById("price-matter").textContent=market.matter.price.toFixed(1);
     document.getElementById("price-energy").textContent=market.energy.price.toFixed(1);
     document.getElementById("price-refined").textContent=market.refined.price.toFixed(1);
+
+    // stats overlay
+    document.getElementById("stat-prod-matter").textContent=statProdMatter.toFixed(2)+"/s";
+    document.getElementById("stat-prod-energy").textContent=statProdEnergy.toFixed(2)+"/s";
+    document.getElementById("stat-prod-refined").textContent=statProdRefined.toFixed(2)+"/s";
+    document.getElementById("stat-research").textContent=statResearch.toFixed(2)+"/s";
+
+    // top bar mini valeurs
+    document.getElementById("top-matter").textContent=resources.matter.toFixed(1);
+    document.getElementById("top-energy").textContent=resources.energy.toFixed(1);
+    document.getElementById("top-refined").textContent=resources.refined.toFixed(1);
+    document.getElementById("top-waste").textContent=resources.waste.toFixed(1);
+    document.getElementById("top-money").textContent=money.toFixed(0);
+    document.getElementById("top-pollution").textContent=pollutionGlobal.toFixed(1);
+    document.getElementById("top-maintenance").textContent=maintenanceGlobal.toFixed(0)+"%";
 }
 
 /* ============================================================
-   OVERLAY MARCHÉ
+   OVERLAYS MARCHÉ / STATS / AIDE
    ============================================================ */
 
 const marketOverlay=document.getElementById("market-overlay");
@@ -980,6 +1177,83 @@ document.getElementById("btn-market").addEventListener("click",openMarketOverlay
 document.getElementById("sell-matter").addEventListener("click",()=>{sellResource("matter",10);refreshMarketOverlay();});
 document.getElementById("sell-energy").addEventListener("click",()=>{sellResource("energy",10);refreshMarketOverlay();});
 document.getElementById("sell-refined").addEventListener("click",()=>{sellResource("refined",5);refreshMarketOverlay();});
+
+const statsOverlay=document.getElementById("stats-overlay");
+const statsOverlayClose=document.getElementById("stats-overlay-close");
+function openStatsOverlay(){statsOverlay.style.display="flex";}
+function closeStatsOverlay(){statsOverlay.style.display="none";}
+statsOverlayClose.addEventListener("click",closeStatsOverlay);
+statsOverlay.querySelector(".overlay-backdrop").addEventListener("click",closeStatsOverlay);
+document.getElementById("btn-stats").addEventListener("click",openStatsOverlay);
+
+const helpOverlay=document.getElementById("help-overlay");
+const helpOverlayClose=document.getElementById("help-overlay-close");
+function openHelpOverlay(){helpOverlay.style.display="flex";}
+function closeHelpOverlay(){helpOverlay.style.display="none";}
+helpOverlayClose.addEventListener("click",closeHelpOverlay);
+helpOverlay.querySelector(".overlay-backdrop").addEventListener("click",closeHelpOverlay);
+document.getElementById("btn-help").addEventListener("click",openHelpOverlay);
+
+/* ============================================================
+   MENU GLOBAL (TOP BTN + MOBILE)
+   ============================================================ */
+
+const topMenuBtn=document.getElementById("top-menu-btn");
+const mobileMenuPanel=document.getElementById("mobile-menu-panel");
+let mobileMenuOpen=false;
+topMenuBtn.addEventListener("click",()=>{
+    mobileMenuOpen=!mobileMenuOpen;
+    mobileMenuPanel.style.display=mobileMenuOpen?"block":"none";
+});
+document.getElementById("mmarket").addEventListener("click",()=>{openMarketOverlay();});
+document.getElementById("mstats").addEventListener("click",()=>{openStatsOverlay();});
+document.getElementById("mhelp").addEventListener("click",()=>{openHelpOverlay();});
+
+/* ============================================================
+   OVERLAY INFO (icônes du haut)
+   ============================================================ */
+
+const infoOverlay=document.getElementById("info-overlay");
+const infoOverlayClose=document.getElementById("info-overlay-close");
+const infoTitle=document.getElementById("info-title");
+const infoBody=document.getElementById("info-body");
+
+function openInfoOverlay(title,html){
+    infoTitle.textContent=title;
+    infoBody.innerHTML=html;
+    infoOverlay.style.display="flex";
+}
+function closeInfoOverlay(){infoOverlay.style.display="none";}
+infoOverlayClose.addEventListener("click",closeInfoOverlay);
+infoOverlay.querySelector(".overlay-backdrop").addEventListener("click",closeInfoOverlay);
+
+document.getElementById("top-resources").addEventListener("click",()=>{
+    const html=`
+        <div class="hud-row"><span>⚙️ Matière</span><span>${resources.matter.toFixed(1)}</span></div>
+        <div class="hud-row"><span>⚡ Énergie</span><span>${resources.energy.toFixed(1)}</span></div>
+        <div class="hud-row"><span>💎 Raffinée</span><span>${resources.refined.toFixed(1)}</span></div>
+        <div class="hud-row"><span>🗑️ Déchets</span><span>${resources.waste.toFixed(1)}</span></div>
+    `;
+    openInfoOverlay("Ressources",html);
+});
+document.getElementById("top-state").addEventListener("click",()=>{
+    const html=`
+        <div class="hud-row"><span>☣️ Pollution globale</span><span>${pollutionGlobal.toFixed(1)}</span></div>
+        <div class="hud-row"><span>🛠️ Maintenance moyenne</span><span>${maintenanceGlobal.toFixed(0)}%</span></div>
+        <div class="hud-row"><span>🔼 Niveau</span><span>${level}</span></div>
+        <div class="hud-row"><span>🏅 Prestige</span><span>${prestige}</span></div>
+    `;
+    openInfoOverlay("État global",html);
+});
+document.getElementById("top-economy").addEventListener("click",()=>{
+    const html=`
+        <div class="hud-row"><span>💰 Argent</span><span>${money.toFixed(0)}</span></div>
+        <div class="hud-row"><span>Prix ⚙️</span><span>${market.matter.price.toFixed(1)}</span></div>
+        <div class="hud-row"><span>Prix ⚡</span><span>${market.energy.price.toFixed(1)}</span></div>
+        <div class="hud-row"><span>Prix 💎</span><span>${market.refined.price.toFixed(1)}</span></div>
+    `;
+    openInfoOverlay("Économie",html);
+});
 
 /* ============================================================
    LANCEMENT
